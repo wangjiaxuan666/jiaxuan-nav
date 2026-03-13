@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jiaxuan's Bioinfo Terminal</title>
+    <link rel="icon" href="https://pic-1259340288.cos.ap-guangzhou.myqcloud.com/img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        /* ================= 赛博朋克主题变量 ================= */
+        :root {
+            --bg-color: #050b14;        
+            --card-bg: rgba(15, 23, 42, 0.45); 
+            --text-main: #e2e8f0;       
+            --text-muted: #64748b;      
+            --accent: #00ffcc;          
+            --accent-glow: rgba(0, 255, 204, 0.6); 
+            --border-color: rgba(0, 255, 204, 0.15); 
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+        body {
+            font-family: 'Fira Code', 'Segoe UI', Consolas, sans-serif;
+            margin: 0; color: var(--text-main); overflow-x: hidden; background-color: var(--bg-color);
+        }
+
+        /* ================= 开机动画与粒子层 ================= */
+        #boot-screen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+            padding: 5%; box-sizing: border-box; transition: opacity 0.8s ease-out, transform 1s ease-in;
+        }
+        .boot-text { color: #00ffcc; font-size: 1.2rem; margin: 8px 0; text-shadow: 0 0 5px #00ffcc; opacity: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .boot-cursor { display: inline-block; width: 12px; height: 1.2rem; background: #00ffcc; animation: blink 0.8s infinite; vertical-align: bottom; margin-left: 5px; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .boot-complete { opacity: 0; pointer-events: none; transform: scale(1.1); filter: blur(10px); }
+        #particles-js { position: fixed; width: 100vw; height: 100vh; top: 0; left: 0; z-index: -1; }
+        
+        /* ================= 主体框架 ================= */
+        .main-container { position: relative; z-index: 1; padding: 40px 5% 80px 5%; max-width: 1600px; margin: 0 auto; display: none; }
+        
+        /* ================= 顶部标题与 Logo 样式 ================= */
+        .header { margin-bottom: 50px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; position: relative; }
+        .header::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 150px; height: 3px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        
+        .header h1 { 
+            font-size: 2.5rem; margin: 0 0 10px 0; color: #fff; 
+            text-shadow: 0 0 15px var(--accent-glow); letter-spacing: 2px;
+            display: flex; align-items: center; 
+        }
+        
+        /* 专属 Logo 的全息发光特效 */
+        .site-logo { 
+            width: 48px; height: 48px; margin-right: 18px; 
+            filter: drop-shadow(0 0 10px var(--accent)); animation: pulse 2.5s infinite; 
+        }
+        
+        @keyframes pulse { 0%, 100% { filter: drop-shadow(0 0 15px var(--accent)); } 50% { filter: drop-shadow(0 0 2px var(--accent)); } }
+        .category-title { font-size: 1.25rem; color: var(--text-main); margin: 50px 0 20px 0; display: flex; align-items: center; gap: 10px; text-shadow: 0 0 8px rgba(255,255,255,0.3); border-left: 4px solid var(--accent); padding-left: 12px; }
+        
+        /* ================= HUD 卡片基础样式 ================= */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+        .nav-card {
+            background-color: var(--card-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; text-decoration: none; color: var(--text-main);
+            display: flex; align-items: center; gap: 15px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden; opacity: 0; transform: translateY(20px); cursor: pointer;
+        }
+        .nav-card::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.15), transparent); transition: all 0.5s; transform: skewX(-20deg);
+        }
+        .nav-card .icon-box { background: rgba(0, 255, 204, 0.05); min-width: 42px; height: 42px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid rgba(0, 255, 204, 0.1); transition: all 0.3s ease; }
+        .nav-card .card-text { display: flex; flex-direction: column; overflow: hidden; }
+        .nav-card .title { font-weight: 600; font-size: 1.05rem; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .nav-card .desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .nav-card:hover { transform: translateY(-4px) scale(1.02); border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow), inset 0 0 10px rgba(0, 255, 204, 0.1); background-color: rgba(15, 23, 42, 0.8); z-index: 10; }
+        .nav-card:hover::before { left: 200%; transition: all 0.6s ease; }
+        .nav-card:hover .icon-box { background: var(--accent); color: #000 !important; box-shadow: 0 0 15px var(--accent); }
+        .nav-card:hover .title { color: var(--accent); text-shadow: 0 0 5px var(--accent-glow); }
+        
+        .new-badge { font-size: 0.65rem; background: #ef4444; color: #fff; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; animation: blink 2s infinite; }
+        .dir-badge { font-size: 0.65rem; background: var(--accent); color: #000; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; font-weight: bold; }
+
+        /* ================= 文件夹弹窗引擎 (Modal) ================= */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(2, 6, 12, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 10000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: all 0.4s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-window {
+            width: 90%; max-width: 1000px; max-height: 80vh; overflow-y: auto;
+            background: #0b1120; border: 1px solid var(--accent); border-radius: 12px;
+            padding: 30px; box-shadow: 0 0 40px rgba(0,255,204,0.15), inset 0 0 20px rgba(0,255,204,0.05);
+            transform: scale(0.9) translateY(20px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        .modal-overlay.active .modal-window { transform: scale(1) translateY(0); }
+        
+        .modal-window::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+            background: var(--accent); opacity: 0.5; filter: blur(3px);
+            animation: scanline 3s linear infinite; pointer-events: none;
+        }
+        @keyframes scanline { 0% { top: 0; } 100% { top: 100%; } }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--accent); padding-bottom: 15px; margin-bottom: 25px; }
+        .modal-title { color: var(--accent); font-size: 1.4rem; font-weight: bold; text-shadow: 0 0 10px var(--accent-glow); display: flex; align-items: center; gap: 10px; }
+        .close-btn { color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
+        .close-btn:hover { color: #ef4444; transform: rotate(90deg) scale(1.2); text-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
+
+        .modal-card { opacity: 1 !important; transform: none !important; animation: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="boot-screen">
+        <div id="terminal-output"></div>
+        <div class="boot-text" style="opacity: 1;" id="cursor-line"><span class="boot-cursor"></span></div>
+    </div>
+
+    <div id="particles-js"></div>
+
+    <div id="hud-modal" class="modal-overlay" onclick="closeFolder(event)">
+        <div class="modal-window" onclick="event.stopPropagation()"> 
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title"><i class="fas fa-folder-open"></i>MODULE</div>
+                <i class="fas fa-times close-btn" onclick="closeFolder(event)"></i>
+            </div>
+            <div class="grid-container" id="modal-body-content"></div>
+        </div>
+    </div>
+
+    <div style="display: none;">
+        <div id="folder-single-cell">
+            <a href="https://satijalab.org/seurat/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #12e6e6;"><i class="fas fa-concierge-bell"></i></div>
+                <div class="card-text"><span class="title">Seurat Lab</span><span class="desc">R语言 单细胞转录组核心包</span></div>
+            </a>
+            <a href="https://scanpy.readthedocs.io/en/stable/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #3b82f6;"><i class="fab fa-python"></i></div>
+                <div class="card-text"><span class="title">Scanpy</span><span class="desc">Python端 单细胞处理霸主</span></div>
+            </a>
+            <a href="http://cole-trapnell-lab.github.io/monocle-release/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #fb5b95;"><i class="fas fa-code-branch"></i></div>
+                <div class="card-text"><span class="title">Monocle</span><span class="desc">单细胞发育拟时轨迹分析</span></div>
+            </a>
+            <a href="https://squidpy.readthedocs.io/en/stable/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #f59e0b;"><i class="fas fa-layer-group"></i></div>
+                <div class="card-text"><span class="title">Squidpy</span><span class="desc">空间转录组分析工具</span></div>
+            </a>
+        </div>
+
+        <div id="folder-docking">
+            <a href="https://vina.scripps.edu/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #10b981;"><i class="fas fa-magnet"></i></div>
+                <div class="card-text"><span class="title">AutoDock Vina</span><span class="desc">分子对接模拟经典软件</span></div>
+            </a>
+            <a href="https://www.rcsb.org/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #38bdf8;"><i class="fas fa-cubes"></i></div>
+                <div class="card-text"><span class="title">RCSB PDB</span><span class="desc">蛋白 3D 结构权威数据库</span></div>
+            </a>
+            <a href="https://go.drugbank.com/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #ef4444;"><i class="fas fa-pills"></i></div>
+                <div class="card-text"><span class="title">DrugBank</span><span class="desc">药物与靶点相互作用核心库</span></div>
+            </a>
+        </div>
+
+        <div id="folder-ai-engines">
+            <a href="https://gemini.google.com/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #8ab4f8;"><i class="fas fa-sparkles"></i></div>
+                <div class="card-text"><span class="title">Google Gemini</span><span class="desc">谷歌原生多模态大模型</span></div>
+            </a>
+            <a href="https://chat.openai.com/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #10a37f;"><i class="fas fa-brain"></i></div>
+                <div class="card-text"><span class="title">ChatGPT</span><span class="desc">OpenAI 智能编码助手</span></div>
+            </a>
+            <a href="https://chat.deepseek.com/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #4b88ff;"><i class="fas fa-robot"></i></div>
+                <div class="card-text"><span class="title">DeepSeek</span><span class="desc">深度求索 深度推理模型</span></div>
+            </a>
+            <a href="https://claude.ai/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #d97757;"><i class="fas fa-comment-dots"></i></div>
+                <div class="card-text"><span class="title">Claude 3</span><span class="desc">Anthropic 超长上下文分析</span></div>
+            </a>
+        </div>
+
+        <div id="folder-daily-tools">
+            <a href="https://justmysocks1.net/members/clientarea.php?action=productdetails&id=18406" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #537dcc;"><i class="fas fa-paper-plane"></i></div>
+                <div class="card-text"><span class="title">Proxy Server</span><span class="desc">科学上网节点面板</span></div>
+            </a>
+            <a href="http://md.aclickall.com/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #f8fafc;"><i class="fab fa-markdown"></i></div>
+                <div class="card-text"><span class="title">Markdown 转换</span><span class="desc">微信公众号一键排版神器</span></div>
+            </a>
+            <a href="https://share1223.com/free.html" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #37cf23;"><i class="fas fa-image"></i></div>
+                <div class="card-text"><span class="title">在线图床</span><span class="desc">免费图片托管加速服务</span></div>
+            </a>
+            <a href="https://mp.weixin.qq.com/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #3dd417;"><i class="fab fa-weixin"></i></div>
+                <div class="card-text"><span class="title">微信公众号后台</span><span class="desc">运营数据与文章管理</span></div>
+            </a>
+            <a href="https://www.webfx.com/tools/emoji-cheat-sheet/" target="_blank" class="nav-card modal-card">
+                <div class="icon-box" style="color: #e69b12;"><i class="far fa-smile-beam"></i></div>
+                <div class="card-text"><span class="title">Emoji 速查表</span><span class="desc">Markdown 表情代码字典</span></div>
+            </a>
+        </div>
+    </div>
+    <div class="main-container" id="main-hud">
+        <div class="header">
+            <h1>
+                <img src="https://pic-1259340288.cos.ap-guangzhou.myqcloud.com/img/icon.png" alt="Jiaxuan Logo" class="site-logo">
+                JIAXUAN_WORKSPACE_ [王家轩 -> 工作空间...]
+            </h1>
+            <p style="color: var(--accent); font-family: Microsoft YaHei; font-weight: 700; letter-spacing: 1px;">
+                > SECURE CONNECTION ESTABLISHED | 炫酷的个人导航页面 
+              </p>
+        </div>
+
+        <div class="category-title"><i class="fas fa-laptop-code"></i> 代码与服务器</div>
+        <div class="grid-container">
+            <a href="http://61.174.243.80:11463/" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #3b82f6;"><i class="fab fa-r-project"></i></div>
+                <div class="card-text"><span class="title">废弃</span><span class="desc">IP: 61.174.243.80</span></div>
+            </a>
+            <a href="http://172.18.44.147:8787" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #d31473;"><i class="fab fa-r-project"></i></div>
+                <div class="card-text"><span class="title">废弃</span><span class="desc">Intranet 147</span></div>
+            </a>
+            <a href="https://github.com/wangjiaxuan666" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #fff;"><i class="fab fa-github"></i></div>
+                <div class="card-text"><span class="title">GitHub Repos</span><span class="desc">My Open Source Code</span></div>
+            </a>
+        </div>
+
+        <div class="category-title"><i class="fas fa-disease"></i> 肿瘤微环境 & 微生态</div>
+        <div class="grid-container">
+            <div class="nav-card" onclick="openFolder('单细胞分析引擎', 'folder-single-cell')">
+                <div class="icon-box" style="color: #00ffcc; font-size: 1.5rem;"><i class="fas fa-folder-tree"></i></div>
+                <div class="card-text">
+                    <span class="title">单细胞全家桶 <span class="dir-badge">DIR</span></span>
+                    <span class="desc">Seurat, Scanpy, Monocle...</span>
+                </div>
+            </div>
+            <a href="https://rachaellappan.github.io/16S-analysis/beta-diversity.html" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #b2373e;"><i class="fas fa-microscope"></i></div>
+                <div class="card-text"><span class="title">16s 扩增子指南</span><span class="desc">微生物多样性分析手册</span></div>
+            </a>
+            <a href="https://www.genome.jp/virushostdb/" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #10b981;"><i class="fas fa-bug"></i></div>
+                <div class="card-text"><span class="title">Virus-Host DB</span><span class="desc">病毒-宿主互作数据库</span></div>
+            </a>
+            <a href="https://docs.qiime2.org/" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #f59e0b;"><i class="fas fa-bacterium"></i></div>
+                <div class="card-text"><span class="title">QIIME 2</span><span class="desc">微生物组分析黄金标准</span></div>
+            </a>
+        </div>
+
+        <div class="category-title"><i class="fas fa-dna"></i> 组学数据库 & 蛋白结构</div>
+        <div class="grid-container">
+            <div class="nav-card" onclick="openFolder('分子对接与结构库', 'folder-docking')">
+                <div class="icon-box" style="color: #00ffcc; font-size: 1.5rem;"><i class="fas fa-folder-tree"></i></div>
+                <div class="card-text">
+                    <span class="title">数据库 <span class="dir-badge">DIR</span></span>
+                    <span class="desc">AutoDock, DrugBank, PDB...</span>
+                </div>
+            </div>
+            <a href="http://www.ebi.ac.uk/interpro/" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #c94612;"><i class="fas fa-align-left"></i></div>
+                <div class="card-text"><span class="title">InterPro</span><span class="desc">蛋白序列与结构预测</span></div>
+            </a>
+            <a href="https://molbiol-tools.ca/Motifs.htm" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #b2373e;"><i class="fas fa-fingerprint"></i></div>
+                <div class="card-text"><span class="title">Motif Tools</span><span class="desc">Motif 转录因子结合位点</span></div>
+            </a>
+            <a href="http://www.ichemistry.cn/" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #48008b;"><i class="fas fa-flask"></i></div>
+                <div class="card-text"><span class="title">CAS 化学查询</span><span class="desc">化合物基础信息检索</span></div>
+            </a>
+        </div>
+
+        <div class="category-title"><i class="fas fa-chart-pie"></i> 数据可视化与绘图美学</div>
+        <div class="grid-container">
+            <a href="https://app.biorender.com" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #0d81c5;"><i class="fas fa-paint-brush"></i></div>
+                <div class="card-text"><span class="title">BioRender</span><span class="desc">高分文章生物通路示意图</span></div>
+            </a>
+            <a href="http://colorbrewer2.org" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #10b981;"><i class="fas fa-palette"></i></div>
+                <div class="card-text"><span class="title">ColorBrewer 2.0</span><span class="desc">科研数据地图与散点配色</span></div>
+            </a>
+            <a href="https://www.color-hex.com/" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #cc0000;"><i class="fas fa-fill-drip"></i></div>
+                <div class="card-text"><span class="title">Color-hex</span><span class="desc">Hex 色板灵感库</span></div>
+            </a>
+        </div>
+
+        <div class="category-title"><i class="fas fa-book-reader"></i> 顶级文献与统计教程</div>
+        <div class="grid-container">
+
+            <a href="http://genomicsclass.github.io/book/" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: blueviolet;"><i class="fas fa-user-graduate"></i></div>
+                <div class="card-text"><span class="title">PH525x 教程</span><span class="desc">哈佛生信数据分析电子书</span></div>
+            </a>
+
+            <a href="https://www.biorxiv.org/" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #bb5512;"><i class="fas fa-book-open"></i></div>
+                <div class="card-text"><span class="title">废弃</span><span class="desc">废弃</span></div>
+            </a>
+            <a href="https://sci-hub.se/" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #ef4444;"><i class="fas fa-unlock-alt"></i></div>
+                <div class="card-text"><span class="title">废弃</span><span class="desc">文献解锁 (实时域名更新)</span></div>
+            </a>
+            <a href="https://statquest.org/" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #b2373e;"><i class="fas fa-play-circle"></i></div>
+                <div class="card-text"><span class="title">废弃</span><span class="desc">生信与统计学神级视频</span></div>
+            </a>
+        </div>
+
+        <div class="category-title"><i class="fas fa-microchip"></i> 工作相关网页 </div>
+        <div class="grid-container">
+            <div class="nav-card" onclick="openFolder('AI 核心算力引擎', 'folder-ai-engines')">
+                <div class="icon-box" style="color: #00ffcc; font-size: 1.5rem;"><i class="fas fa-brain"></i></div>
+                <div class="card-text">
+                    <span class="title">AI 大模型引擎 <span class="dir-badge">DIR</span> <span class="new-badge">NEW</span></span>
+                    <span class="desc">Gemini, DeepSeek, ChatGPT...</span>
+                </div>
+            </div>
+
+            <a href="https://console.cloud.tencent.com/domain/manage/abego.cn/basicinfo" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #537dcc;"><i class="fab fa-qq"></i></div>
+                <div class="card-text"><span class="title">腾讯云平台</span><span class="desc">abego.cn 域名与服务器管理</span></div>
+            </a>
+
+            <a href="http://bgioa.genomics.cn/wui/main.jsp?templateId=1#" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #1d752c;"><i class="fas fa-archway"></i></div>
+                <div class="card-text"><span class="title">废弃</span><span class="desc">内部系统登录</span></div>
+            </a>
+            <a href="https://pm.genomics.cn/Pages/Users/UserHomeNew.aspx" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #fb5b95;"><i class="fas fa-tasks"></i></div>
+                <div class="card-text"><span class="title">废弃</span><span class="desc">项目任务进度把控</span></div>
+            </a>
+            <a href="https://work.weixin.qq.com/mail/" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #10b981;"><i class="fas fa-envelope"></i></div>
+                <div class="card-text"><span class="title">废弃</span><span class="desc">BGI 工作邮件收发</span></div>
+            </a>
+            <a href="https://bgitech.sharepoint.com/sites/infection_spatial/Shared%20Documents/Forms/AllItems.aspx" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: cadetblue;"><i class="fas fa-file-archive"></i></div>
+                <div class="card-text"><span class="title">废弃</span><span class="desc">感染时空与病原文档云</span></div>
+            </a>
+            <a href="https://console.cloud.tencent.com/domain/manage/abego.cn/basicinfo" target="_blank" class="nav-card">
+                <div class="icon-box" style="color: #537dcc;"><i class="fab fa-qq"></i></div>
+                <div class="card-text"><span class="title">腾讯云平台</span><span class="desc">abego.cn 域名与服务器管理</span></div>
+            </a>
+            
+            <div class="nav-card" onclick="openFolder('极客实用工具箱', 'folder-daily-tools')">
+                <div class="icon-box" style="color: #00ffcc; font-size: 1.5rem;"><i class="fas fa-toolbox"></i></div>
+                <div class="card-text">
+                    <span class="title">极客实用工具 <span class="dir-badge">DIR</span></span>
+                    <span class="desc">图床, Markdown, 代理...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. 文件夹系统 (HUD Modal) 引擎
+        function openFolder(title, contentId) {
+            document.getElementById('modal-title').innerHTML = `<i class="fas fa-folder-open"></i> MODULE: ${title}`;
+            document.getElementById('modal-body-content').innerHTML = document.getElementById(contentId).innerHTML;
+            document.getElementById('hud-modal').classList.add('active');
+            document.body.style.overflow = "hidden"; 
+        }
+
+        function closeFolder(event) {
+            if(event) event.preventDefault();
+            document.getElementById('hud-modal').classList.remove('active');
+            document.body.style.overflow = "auto"; 
+        }
+
+        // 2. 开机动画与粒子层
+        document.addEventListener("DOMContentLoaded", () => {
+            const bootTexts = [
+                "[SYSTEM] INITIALIZING JIAXUAN_OS CORE v4.0...",
+                "[NETWORK] ESTABLISHING SECURE TUNNEL TO HPC CLUSTERS...",
+                "[AI-CORE] ACTIVATING LLM ENGINES: GEMINI, DEEPSEEK...",  /* 新增的 AI 启动日志 */
+                "[AUTH] DECRYPTING BIOMETRICS...",
+                "[SUCCESS] ACCESS GRANTED. WELCOME BACK",
+                "[系统] 正在初始化 JIAXUAN_OS 核心 v4.0...",
+                "[网络] 正在建立与计算集群 (HPC) 的安全隧道...",
+                "[神经元] AI 模型引擎已激活: Gemini, DeepSeek...",
+                "[验证] 生物特征解析中...",
+                "[成功] 身份验证通过。欢迎回来，研究员先生"
+            ];
+            const terminal = document.getElementById('terminal-output');
+            const bootScreen = document.getElementById('boot-screen');
+            const mainHud = document.getElementById('main-hud');
+            let delay = 0;
+
+            bootTexts.forEach((text, index) => {
+                setTimeout(() => {
+                    const p = document.createElement('div');
+                    p.className = 'boot-text'; p.innerText = text;
+                    terminal.appendChild(p);
+                    setTimeout(() => p.style.opacity = 1, 50);
+                    if (index === bootTexts.length - 1) {
+                        setTimeout(() => {
+                            bootScreen.classList.add('boot-complete');
+                            mainHud.style.display = 'block';
+                            document.querySelectorAll('#main-hud .nav-card').forEach((card, i) => {
+                                setTimeout(() => { card.style.opacity = 1; card.style.transform = 'translateY(0)'; }, i * 30);
+                            });
+                        }, 1200);
+                    }
+                }, delay);
+                delay += Math.random() * 400 + 250; 
+            });
+
+            // 粒子特效
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": { "value": 70, "density": { "enable": true, "value_area": 800 } },
+                    "color": { "value": "#00ffcc" },
+                    "shape": { "type": "circle" },
+                    "opacity": { "value": 0.5, "random": true },
+                    "size": { "value": 3, "random": true },
+                    "line_linked": { "enable": true, "distance": 150, "color": "#00ffcc", "opacity": 0.2, "width": 1 },
+                    "move": { "enable": true, "speed": 2, "direction": "none", "random": true, "out_mode": "out" }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+                    "modes": { "grab": { "distance": 250, "line_linked": { "opacity": 0.8 } }, "push": { "particles_nb": 4 } }
+                },
+                "retina_detect": true
+            });
+        });
+    </script>
+</body>
+</html>

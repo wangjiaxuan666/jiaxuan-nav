@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jiaxuan's Bioinfo Terminal</title>
+    <link rel="icon" href="https://pic-1259340288.cos.ap-guangzhou.myqcloud.com/img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    <style>
+        /* ================= 赛博朋克主题变量 ================= */
+        :root {
+            --bg-color: #050b14;        
+            --card-bg: rgba(15, 23, 42, 0.45); 
+            --text-main: #e2e8f0;       
+            --text-muted: #64748b;      
+            --accent: #00ffcc;          
+            --accent-glow: rgba(0, 255, 204, 0.6); 
+            --border-color: rgba(0, 255, 204, 0.15); 
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+        body { font-family: 'Fira Code', 'Segoe UI', Consolas, sans-serif; margin: 0; color: var(--text-main); overflow-x: hidden; background-color: var(--bg-color); }
+
+        /* 开机动画与粒子层 */
+        #boot-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 5%; box-sizing: border-box; transition: opacity 0.8s ease-out, transform 1s ease-in; }
+        .boot-text { color: #00ffcc; font-size: 1.2rem; margin: 8px 0; text-shadow: 0 0 5px #00ffcc; opacity: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .boot-cursor { display: inline-block; width: 12px; height: 1.2rem; background: #00ffcc; animation: blink 0.8s infinite; vertical-align: bottom; margin-left: 5px; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .boot-complete { opacity: 0; pointer-events: none; transform: scale(1.1); filter: blur(10px); }
+        #particles-js { position: fixed; width: 100vw; height: 100vh; top: 0; left: 0; z-index: -1; }
+        
+        /* 主体框架 */
+        .main-container { position: relative; z-index: 1; padding: 40px 5% 80px 5%; max-width: 1600px; margin: 0 auto; display: none; }
+        
+        /* 顶部标题与 Logo */
+        .header { margin-bottom: 50px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; position: relative; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 150px; height: 3px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .header h1 { font-size: 2.5rem; margin: 0 0 10px 0; color: #fff; text-shadow: 0 0 15px var(--accent-glow); letter-spacing: 2px; display: flex; align-items: center; }
+        .site-logo { width: 48px; height: 48px; margin-right: 18px; filter: drop-shadow(0 0 10px var(--accent)); animation: pulse 2.5s infinite; }
+        @keyframes pulse { 0%, 100% { filter: drop-shadow(0 0 15px var(--accent)); } 50% { filter: drop-shadow(0 0 2px var(--accent)); } }
+        
+        /* 工具栏 */
+        .action-bar { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-tool { background: rgba(0, 255, 204, 0.05); border: 1px solid var(--border-color); color: var(--accent); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: 0.3s; letter-spacing: 1px; }
+        .btn-tool:hover { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent-glow); }
+
+        .category-title { font-size: 1.25rem; color: var(--text-main); margin: 50px 0 20px 0; display: flex; align-items: center; gap: 10px; text-shadow: 0 0 8px rgba(255,255,255,0.3); border-left: 4px solid var(--accent); padding-left: 12px; }
+        
+        /* HUD 卡片基础样式 */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+        .nav-card {
+            background-color: var(--card-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; text-decoration: none; color: var(--text-main);
+            display: flex; align-items: center; gap: 15px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden; opacity: 1; cursor: pointer;
+        }
+        .nav-card::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.15), transparent); transition: all 0.5s; transform: skewX(-20deg);
+        }
+        .nav-card .icon-box { background: rgba(0, 255, 204, 0.05); min-width: 42px; height: 42px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid rgba(0, 255, 204, 0.1); transition: all 0.3s ease; }
+        .nav-card .card-text { display: flex; flex-direction: column; overflow: hidden; }
+        .nav-card .title { font-weight: 600; font-size: 1.05rem; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
+        .nav-card .desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .nav-card:hover { transform: translateY(-4px) scale(1.02); border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow), inset 0 0 10px rgba(0, 255, 204, 0.1); background-color: rgba(15, 23, 42, 0.8); z-index: 10; }
+        .nav-card:hover::before { left: 200%; transition: all 0.6s ease; }
+        .nav-card:hover .icon-box { background: var(--accent); color: #000 !important; box-shadow: 0 0 15px var(--accent); }
+        .nav-card:hover .title { color: var(--accent); text-shadow: 0 0 5px var(--accent-glow); }
+        
+        .new-badge { font-size: 0.65rem; background: #ef4444; color: #fff; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; animation: blink 2s infinite; }
+        .dir-badge { font-size: 0.65rem; background: var(--accent); color: #000; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; font-weight: bold; }
+
+        /* 文件夹弹窗引擎 (Modal) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(2, 6, 12, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 10000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: all 0.4s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-window {
+            width: 90%; max-width: 1000px; max-height: 80vh; overflow-y: auto;
+            background: #0b1120; border: 1px solid var(--accent); border-radius: 12px;
+            padding: 30px; box-shadow: 0 0 40px rgba(0,255,204,0.15), inset 0 0 20px rgba(0,255,204,0.05);
+            transform: scale(0.9) translateY(20px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        .modal-overlay.active .modal-window { transform: scale(1) translateY(0); }
+        .modal-window::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: var(--accent); opacity: 0.5; filter: blur(3px); animation: scanline 3s linear infinite; pointer-events: none; }
+        @keyframes scanline { 0% { top: 0; } 100% { top: 100%; } }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--accent); padding-bottom: 15px; margin-bottom: 25px; }
+        .modal-title { color: var(--accent); font-size: 1.4rem; font-weight: bold; text-shadow: 0 0 10px var(--accent-glow); display: flex; align-items: center; gap: 10px; }
+        .close-btn { color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
+        .close-btn:hover { color: #ef4444; transform: rotate(90deg) scale(1.2); text-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
+        .modal-card { opacity: 1 !important; transform: none !important; animation: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="boot-screen">
+        <div id="terminal-output"></div>
+        <div class="boot-text" style="opacity: 1;" id="cursor-line"><span class="boot-cursor"></span></div>
+    </div>
+
+    <div id="particles-js"></div>
+
+    <div id="hud-modal" class="modal-overlay" onclick="closeFolder(event)">
+        <div class="modal-window" onclick="event.stopPropagation()"> 
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title"><i class="fas fa-folder-open"></i> MODULE</div>
+                <i class="fas fa-times close-btn" onclick="closeFolder(event)"></i>
+            </div>
+            <div class="grid-container" id="modal-body-content"></div>
+        </div>
+    </div>
+
+    <div class="main-container" id="main-hud">
+        <div class="header">
+            <div>
+                <h1>
+                    <img src="https://pic-1259340288.cos.ap-guangzhou.myqcloud.com/img/icon.png" alt="Jiaxuan Logo" class="site-logo">
+                    JIAXUAN_WORKSPACE_ [王家轩 -> 工作空间...]
+                </h1>
+                <p style="color: var(--accent); font-family: Microsoft YaHei; font-weight: 700; letter-spacing: 1px;">
+                    > SECURE CONNECTION ESTABLISHED | 炫酷的个人导航页面 
+                </p>
+            </div>
+            <div class="action-bar">
+                <button onclick="exportJSON()" class="btn-tool"><i class="fas fa-download"></i> 导出 JSON</button>
+                <button onclick="document.getElementById('fileInput').click()" class="btn-tool"><i class="fas fa-upload"></i> 导入 JSON</button>
+                <input type="file" id="fileInput" style="display:none" onchange="importJSON(this)">
+            </div>
+        </div>
+
+        <div id="workspace-render-area"></div>
+    </div>
+
+    <script>
+        let workspaceData = [];
+
+        // 1. JSON 渲染引擎 (支持普通卡片和文件夹卡片)
+        function renderHUD() {
+            const area = document.getElementById('workspace-render-area');
+            area.innerHTML = '';
+
+            workspaceData.forEach((cat, cIdx) => {
+                // 渲染分类标题
+                const titleHtml = `<div class="category-title"><i class="${cat.icon}"></i> ${cat.category}</div>`;
+                const gridDiv = document.createElement('div');
+                gridDiv.className = 'grid-container';
+
+                // 渲染项目
+                cat.items.forEach((item, iIdx) => {
+                    const card = document.createElement('a');
+                    card.className = 'nav-card';
+                    
+                    let badgeHtml = '';
+                    if (item.badge) badgeHtml += `<span class="dir-badge">${item.badge}</span>`;
+                    if (item.badge2) badgeHtml += `<span class="new-badge">${item.badge2}</span>`;
+                    card.innerHTML = `
+                        <div class="icon-box" style="color: ${item.color}; ${item.type === 'folder' ? 'font-size: 1.5rem;' : ''}"><i class="${item.icon}"></i></div>
+                        <div class="card-text">
+                            <span class="title">${item.name} ${badgeHtml}</span>
+                            <span class="desc">${item.desc}</span>
+                        </div>
+                    `;
+
+                    // 判断交互行为
+                    if (item.type === 'folder') {
+                        card.onclick = () => openFolder(item.name, cIdx, iIdx);
+                    } else {
+                        card.href = item.url;
+                        card.target = '_blank';
+                    }
+                    gridDiv.appendChild(card);
+                });
+
+                area.insertAdjacentHTML('beforeend', titleHtml);
+                area.appendChild(gridDiv);
+            });
+            localStorage.setItem('jiaxuan_nav_data', JSON.stringify(workspaceData));
+        }
+
+        // 2. 动态文件夹逻辑
+        function openFolder(title, cIdx, iIdx) {
+            document.getElementById('modal-title').innerHTML = `<i class="fas fa-folder-open"></i> MODULE: ${title}`;
+            const modalBody = document.getElementById('modal-body-content');
+            modalBody.innerHTML = ''; // 清空
+
+            const children = workspaceData[cIdx].items[iIdx].children;
+            children.forEach(link => {
+                const card = document.createElement('a');
+                card.className = 'nav-card modal-card';
+                card.href = link.url;
+                card.target = '_blank';
+                card.innerHTML = `
+                    <div class="icon-box" style="color: ${link.color};"><i class="${link.icon}"></i></div>
+                    <div class="card-text"><span class="title">${link.name}</span><span class="desc">${link.desc}</span></div>
+                `;
+                modalBody.appendChild(card);
+            });
+
+            document.getElementById('hud-modal').classList.add('active');
+            document.body.style.overflow = "hidden"; 
+        }
+
+        function closeFolder(event) {
+            if(event) event.preventDefault();
+            document.getElementById('hud-modal').classList.remove('active');
+            document.body.style.overflow = "auto"; 
+        }
+
+        // 3. 数据初始化与导入/导出
+        async function initData() {
+            try {
+                const res = await fetch('./config.json');
+                workspaceData = res.ok ? await res.json() : JSON.parse(localStorage.getItem('jiaxuan_nav_data')) || [];
+            } catch(e) { 
+                workspaceData = JSON.parse(localStorage.getItem('jiaxuan_nav_data')) || []; 
+            }
+            if(workspaceData.length > 0) renderHUD();
+        }
+
+        function exportJSON() {
+            const blob = new Blob([JSON.stringify(workspaceData, null, 4)], {type:"application/json"});
+            const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download="config.json"; a.click();
+        }
+
+        function importJSON(input) {
+            const reader = new FileReader();
+            reader.onload = (e) => { 
+                workspaceData = JSON.parse(e.target.result); 
+                renderHUD(); 
+                alert("导入成功！"); 
+            };
+            reader.readAsText(input.files[0]);
+        }
+
+        // 4. 开机动画与粒子层
+        document.addEventListener("DOMContentLoaded", () => {
+            initData(); // 加载数据
+            
+            const bootTexts = [
+                "[SYSTEM] INITIALIZING JIAXUAN_OS CORE v4.0...",
+                "[NETWORK] ESTABLISHING SECURE TUNNEL TO HPC CLUSTERS...",
+                "[AI-CORE] ACTIVATING LLM ENGINES: GEMINI, DEEPSEEK...", 
+                "[AUTH] DECRYPTING BIOMETRICS...",
+                "[SUCCESS] ACCESS GRANTED. WELCOME BACK",
+                "[系统] 正在初始化 JIAXUAN_OS 核心 v4.0...",
+                "[网络] 正在建立与计算集群 (HPC) 的安全隧道...",
+                "[神经元] AI 模型引擎已激活: Gemini, DeepSeek...",
+                "[验证] 生物特征解析中...",
+                "[成功] 身份验证通过。欢迎回来，研究员先生"
+            ];
+            const terminal = document.getElementById('terminal-output');
+            const bootScreen = document.getElementById('boot-screen');
+            const mainHud = document.getElementById('main-hud');
+            let delay = 0;
+
+            bootTexts.forEach((text, index) => {
+                setTimeout(() => {
+                    const p = document.createElement('div');
+                    p.className = 'boot-text'; p.innerText = text;
+                    terminal.appendChild(p);
+                    setTimeout(() => p.style.opacity = 1, 50);
+                    if (index === bootTexts.length - 1) {
+                        setTimeout(() => {
+                            bootScreen.classList.add('boot-complete');
+                            mainHud.style.display = 'block';
+                            // 移除原有的逐个动画，改为整体淡入以兼容动态渲染
+                            mainHud.style.animation = "fade-in 1s forwards"; 
+                        }, 1200);
+                    }
+                }, delay);
+                delay += Math.random() * 400 + 250; 
+            });
+
+            // 粒子特效
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": { "value": 70, "density": { "enable": true, "value_area": 800 } },
+                    "color": { "value": "#00ffcc" },
+                    "shape": { "type": "circle" },
+                    "opacity": { "value": 0.5, "random": true },
+                    "size": { "value": 3, "random": true },
+                    "line_linked": { "enable": true, "distance": 150, "color": "#00ffcc", "opacity": 0.2, "width": 1 },
+                    "move": { "enable": true, "speed": 2, "direction": "none", "random": true, "out_mode": "out" }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+                    "modes": { "grab": { "distance": 250, "line_linked": { "opacity": 0.8 } }, "push": { "particles_nb": 4 } }
+                },
+                "retina_detect": true
+            });
+        });
+    </script>
+    <style> @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } </style>
+</body>
+</html>

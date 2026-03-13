@@ -1,0 +1,95 @@
+[
+    {
+        "category": "代码与服务器",
+        "icon": "fas fa-laptop-code",
+        "items": [
+            { "type": "link", "name": "废弃", "url": "http://61.174.243.80:11463/", "desc": "IP: 61.174.243.80", "icon": "fab fa-r-project", "color": "#3b82f6" },
+            { "type": "link", "name": "废弃", "url": "http://172.18.44.147:8787", "desc": "Intranet 147", "icon": "fab fa-r-project", "color": "#d31473" },
+            { "type": "link", "name": "GitHub Repos", "url": "https://github.com/wangjiaxuan666", "desc": "My Open Source Code", "icon": "fab fa-github", "color": "#fff" }
+        ]
+    },
+    {
+        "category": "肿瘤微环境 & 微生态",
+        "icon": "fas fa-disease",
+        "items": [
+            {
+                "type": "folder", "name": "单细胞全家桶", "desc": "Seurat, Scanpy, Monocle...", "icon": "fas fa-folder-tree", "color": "#00ffcc", "badge": "DIR",
+                "children": [
+                    { "name": "Seurat Lab", "url": "https://satijalab.org/seurat/", "desc": "R语言 单细胞转录组核心包", "icon": "fas fa-concierge-bell", "color": "#12e6e6" },
+                    { "name": "Scanpy", "url": "https://scanpy.readthedocs.io/en/stable/", "desc": "Python端 单细胞处理霸主", "icon": "fab fa-python", "color": "#3b82f6" },
+                    { "name": "Monocle", "url": "http://cole-trapnell-lab.github.io/monocle-release/", "desc": "单细胞发育拟时轨迹分析", "icon": "fas fa-code-branch", "color": "#fb5b95" },
+                    { "name": "Squidpy", "url": "https://squidpy.readthedocs.io/en/stable/", "desc": "空间转录组分析工具", "icon": "fas fa-layer-group", "color": "#f59e0b" }
+                ]
+            },
+            { "type": "link", "name": "16s 扩增子指南", "url": "https://rachaellappan.github.io/16S-analysis/beta-diversity.html", "desc": "微生物多样性分析手册", "icon": "fas fa-microscope", "color": "#b2373e" },
+            { "type": "link", "name": "Virus-Host DB", "url": "https://www.genome.jp/virushostdb/", "desc": "病毒-宿主互作数据库", "icon": "fas fa-bug", "color": "#10b981" },
+            { "type": "link", "name": "QIIME 2", "url": "https://docs.qiime2.org/", "desc": "微生物组分析黄金标准", "icon": "fas fa-bacterium", "color": "#f59e0b" }
+        ]
+    },
+    {
+        "category": "组学数据库 & 蛋白结构",
+        "icon": "fas fa-dna",
+        "items": [
+            {
+                "type": "folder", "name": "数据库", "desc": "AutoDock, DrugBank, PDB...", "icon": "fas fa-folder-tree", "color": "#00ffcc", "badge": "DIR",
+                "children": [
+                    { "name": "AutoDock Vina", "url": "https://vina.scripps.edu/", "desc": "分子对接模拟经典软件", "icon": "fas fa-magnet", "color": "#10b981" },
+                    { "name": "RCSB PDB", "url": "https://www.rcsb.org/", "desc": "蛋白 3D 结构权威数据库", "icon": "fas fa-cubes", "color": "#38bdf8" },
+                    { "name": "DrugBank", "url": "https://go.drugbank.com/", "desc": "药物与靶点相互作用核心库", "icon": "fas fa-pills", "color": "#ef4444" }
+                ]
+            },
+            { "type": "link", "name": "InterPro", "url": "http://www.ebi.ac.uk/interpro/", "desc": "蛋白序列与结构预测", "icon": "fas fa-align-left", "color": "#c94612" },
+            { "type": "link", "name": "Motif Tools", "url": "https://molbiol-tools.ca/Motifs.htm", "desc": "Motif 转录因子结合位点", "icon": "fas fa-fingerprint", "color": "#b2373e" },
+            { "type": "link", "name": "CAS 化学查询", "url": "http://www.ichemistry.cn/", "desc": "化合物基础信息检索", "icon": "fas fa-flask", "color": "#48008b" }
+        ]
+    },
+    {
+        "category": "数据可视化与绘图美学",
+        "icon": "fas fa-chart-pie",
+        "items": [
+            { "type": "link", "name": "BioRender", "url": "https://app.biorender.com", "desc": "高分文章生物通路示意图", "icon": "fas fa-paint-brush", "color": "#0d81c5" },
+            { "type": "link", "name": "ColorBrewer 2.0", "url": "http://colorbrewer2.org", "desc": "科研数据地图与散点配色", "icon": "fas fa-palette", "color": "#10b981" },
+            { "type": "link", "name": "Color-hex", "url": "https://www.color-hex.com/", "desc": "Hex 色板灵感库", "icon": "fas fa-fill-drip", "color": "#cc0000" }
+        ]
+    },
+    {
+        "category": "顶级文献与统计教程",
+        "icon": "fas fa-book-reader",
+        "items": [
+            { "type": "link", "name": "PH525x 教程", "url": "http://genomicsclass.github.io/book/", "desc": "哈佛生信数据分析电子书", "icon": "fas fa-user-graduate", "color": "blueviolet" },
+            { "type": "link", "name": "废弃", "url": "https://www.biorxiv.org/", "desc": "废弃", "icon": "fas fa-book-open", "color": "#bb5512" },
+            { "type": "link", "name": "废弃", "url": "https://sci-hub.se/", "desc": "文献解锁 (实时域名更新)", "icon": "fas fa-unlock-alt", "color": "#ef4444" },
+            { "type": "link", "name": "废弃", "url": "https://statquest.org/", "desc": "生信与统计学神级视频", "icon": "fas fa-play-circle", "color": "#b2373e" }
+        ]
+    },
+    {
+        "category": "工作相关网页",
+        "icon": "fas fa-microchip",
+        "items": [
+            {
+                "type": "folder", "name": "AI 大模型引擎", "desc": "Gemini, DeepSeek, ChatGPT...", "icon": "fas fa-brain", "color": "#00ffcc", "badge": "DIR", "badge2": "NEW",
+                "children": [
+                    { "name": "Google Gemini", "url": "https://gemini.google.com/", "desc": "谷歌原生多模态大模型", "icon": "fas fa-sparkles", "color": "#8ab4f8" },
+                    { "name": "ChatGPT", "url": "https://chat.openai.com/", "desc": "OpenAI 智能编码助手", "icon": "fas fa-brain", "color": "#10a37f" },
+                    { "name": "DeepSeek", "url": "https://chat.deepseek.com/", "desc": "深度求索 深度推理模型", "icon": "fas fa-robot", "color": "#4b88ff" },
+                    { "name": "Claude 3", "url": "https://claude.ai/", "desc": "Anthropic 超长上下文分析", "icon": "fas fa-comment-dots", "color": "#d97757" }
+                ]
+            },
+            { "type": "link", "name": "腾讯云平台", "url": "https://console.cloud.tencent.com/domain/manage/abego.cn/basicinfo", "desc": "abego.cn 域名与服务器管理", "icon": "fab fa-qq", "color": "#537dcc" },
+            { "type": "link", "name": "废弃", "url": "http://bgioa.genomics.cn/wui/main.jsp?templateId=1#", "desc": "内部系统登录", "icon": "fas fa-archway", "color": "#1d752c" },
+            { "type": "link", "name": "废弃", "url": "https://pm.genomics.cn/Pages/Users/UserHomeNew.aspx", "desc": "项目任务进度把控", "icon": "fas fa-tasks", "color": "#fb5b95" },
+            { "type": "link", "name": "废弃", "url": "https://work.weixin.qq.com/mail/", "desc": "BGI 工作邮件收发", "icon": "fas fa-envelope", "color": "#10b981" },
+            { "type": "link", "name": "废弃", "url": "https://bgitech.sharepoint.com/sites/infection_spatial/Shared%20Documents/Forms/AllItems.aspx", "desc": "感染时空与病原文档云", "icon": "fas fa-file-archive", "color": "cadetblue" },
+            {
+                "type": "folder", "name": "极客实用工具", "desc": "图床, Markdown, 代理...", "icon": "fas fa-toolbox", "color": "#00ffcc", "badge": "DIR",
+                "children": [
+                    { "name": "Proxy Server", "url": "https://justmysocks1.net...", "desc": "科学上网节点面板", "icon": "fas fa-paper-plane", "color": "#537dcc" },
+                    { "name": "Markdown 转换", "url": "http://md.aclickall.com/", "desc": "微信公众号一键排版神器", "icon": "fab fa-markdown", "color": "#f8fafc" },
+                    { "name": "在线图床", "url": "https://share1223.com/free.html", "desc": "免费图片托管加速服务", "icon": "fas fa-image", "color": "#37cf23" },
+                    { "name": "微信公众号后台", "url": "https://mp.weixin.qq.com/", "desc": "运营数据与文章管理", "icon": "fab fa-weixin", "color": "#3dd417" },
+                    { "name": "Emoji 速查表", "url": "https://www.webfx.com/tools/emoji-cheat-sheet/", "desc": "Markdown 表情代码字典", "icon": "far fa-smile-beam", "color": "#e69b12" }
+                ]
+            }
+        ]
+    }
+]
