@@ -7,6 +7,7 @@
     <link rel="icon" href="https://pic-1259340288.cos.ap-guangzhou.myqcloud.com/img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         /* ================= 赛博朋克主题变量 ================= */
         :root {
@@ -34,7 +35,8 @@
         #particles-js { position: fixed; width: 100vw; height: 100vh; top: 0; left: 0; z-index: -1; }
         
         /* 主体框架 */
-        .main-container { position: relative; z-index: 1; padding: 40px 5% 80px 5%; max-width: 1600px; margin: 0 auto; display: none; }
+        .main-container { position: relative; z-index: 1; padding: 40px 5% 80px 5%; max-width: 1600px; margin: 0 auto; display: none; animation: fade-in 1s forwards; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         
         /* 顶部标题与 Logo */
         .header { margin-bottom: 50px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; position: relative; display: flex; justify-content: space-between; align-items: flex-end; }
@@ -49,6 +51,8 @@
         .btn-tool:hover { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent-glow); }
 
         .category-title { font-size: 1.25rem; color: var(--text-main); margin: 50px 0 20px 0; display: flex; align-items: center; gap: 10px; text-shadow: 0 0 8px rgba(255,255,255,0.3); border-left: 4px solid var(--accent); padding-left: 12px; }
+        .add-btn { cursor: pointer; opacity: 0.5; transition: 0.3s; margin-left: auto; margin-right: 10px; color: var(--accent); }
+        .add-btn:hover { opacity: 1; transform: scale(1.2); text-shadow: 0 0 10px var(--accent); }
         
         /* HUD 卡片基础样式 */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
@@ -56,14 +60,11 @@
             background-color: var(--card-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; text-decoration: none; color: var(--text-main);
             display: flex; align-items: center; gap: 15px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative; overflow: hidden; opacity: 1; cursor: pointer;
+            position: relative; overflow: hidden; opacity: 1; cursor: pointer; user-select: none;
         }
-        .nav-card::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.15), transparent); transition: all 0.5s; transform: skewX(-20deg);
-        }
+        .nav-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.15), transparent); transition: all 0.5s; transform: skewX(-20deg); }
         .nav-card .icon-box { background: rgba(0, 255, 204, 0.05); min-width: 42px; height: 42px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid rgba(0, 255, 204, 0.1); transition: all 0.3s ease; }
-        .nav-card .card-text { display: flex; flex-direction: column; overflow: hidden; }
+        .nav-card .card-text { display: flex; flex-direction: column; overflow: hidden; width: 100%; }
         .nav-card .title { font-weight: 600; font-size: 1.05rem; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
         .nav-card .desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .nav-card:hover { transform: translateY(-4px) scale(1.02); border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow), inset 0 0 10px rgba(0, 255, 204, 0.1); background-color: rgba(15, 23, 42, 0.8); z-index: 10; }
@@ -71,34 +72,39 @@
         .nav-card:hover .icon-box { background: var(--accent); color: #000 !important; box-shadow: 0 0 15px var(--accent); }
         .nav-card:hover .title { color: var(--accent); text-shadow: 0 0 5px var(--accent-glow); }
         
-        .new-badge { font-size: 0.65rem; background: #ef4444; color: #fff; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; animation: blink 2s infinite; }
+        .new-badge { font-size: 0.65rem; background: #ef4444; color: #fff; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; animation: blink 2s infinite; font-weight: bold;}
         .dir-badge { font-size: 0.65rem; background: var(--accent); color: #000; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; font-weight: bold; }
-
-        /* 文件夹弹窗引擎 (Modal) */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(2, 6, 12, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            z-index: 10000; display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: all 0.4s ease;
-        }
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
         
-        .modal-window {
-            width: 90%; max-width: 1000px; max-height: 80vh; overflow-y: auto;
-            background: #0b1120; border: 1px solid var(--accent); border-radius: 12px;
-            padding: 30px; box-shadow: 0 0 40px rgba(0,255,204,0.15), inset 0 0 20px rgba(0,255,204,0.05);
-            transform: scale(0.9) translateY(20px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-        }
-        .modal-overlay.active .modal-window { transform: scale(1) translateY(0); }
-        .modal-window::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: var(--accent); opacity: 0.5; filter: blur(3px); animation: scanline 3s linear infinite; pointer-events: none; }
-        @keyframes scanline { 0% { top: 0; } 100% { top: 100%; } }
+        /* 删除按钮 */
+        .del-btn { position: absolute; top: 8px; right: 10px; color: #ef4444; opacity: 0; transition: 0.2s; font-size: 1.1rem; z-index: 20;}
+        .nav-card:hover .del-btn { opacity: 0.5; }
+        .del-btn:hover { opacity: 1 !important; transform: scale(1.2); text-shadow: 0 0 8px #ef4444;}
+        
+        /* 拖拽幽灵样式 */
+        .sortable-ghost { opacity: 0.4; border: 2px dashed var(--accent); background: rgba(0, 255, 204, 0.05); }
 
+        /* 模态框引擎 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 12, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 10000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: all 0.3s ease; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-window { width: 90%; max-width: 1000px; max-height: 80vh; overflow-y: auto; background: #0b1120; border: 1px solid var(--accent); border-radius: 12px; padding: 30px; box-shadow: 0 0 40px rgba(0,255,204,0.15), inset 0 0 20px rgba(0,255,204,0.05); transform: scale(0.95) translateY(20px); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
+        .modal-overlay.active .modal-window { transform: scale(1) translateY(0); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--accent); padding-bottom: 15px; margin-bottom: 25px; }
         .modal-title { color: var(--accent); font-size: 1.4rem; font-weight: bold; text-shadow: 0 0 10px var(--accent-glow); display: flex; align-items: center; gap: 10px; }
         .close-btn { color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
         .close-btn:hover { color: #ef4444; transform: rotate(90deg) scale(1.2); text-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
-        .modal-card { opacity: 1 !important; transform: none !important; animation: none !important; }
+        
+        /* 表单输入框 */
+        .cyber-input { width: 100%; padding: 12px; margin: 8px 0; background: #1e293b; border: 1px solid var(--border-color); color: white; border-radius: 4px; box-sizing: border-box; font-family: 'Fira Code', sans-serif;}
+        .cyber-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+        .btn-save { background: var(--accent); color: #000; width: 100%; padding: 12px; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; border-radius: 4px; font-size: 1rem; transition: 0.3s;}
+        .btn-save:hover { box-shadow: 0 0 15px var(--accent-glow); transform: translateY(-2px); }
+        /* 拖拽合并时的发光反馈 */
+        .merge-highlight {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.8), inset 0 0 15px rgba(0, 255, 204, 0.2) !important;
+            transform: scale(1.05) !important;
+            background: rgba(15, 23, 42, 0.9) !important;
+        }
     </style>
 </head>
 <body>
@@ -120,12 +126,27 @@
         </div>
     </div>
 
+    <div id="addModal" class="modal-overlay" onclick="closeAddModal(event)">
+        <div class="modal-window" onclick="event.stopPropagation()" style="max-width: 450px;"> 
+            <div class="modal-header" style="border-bottom: none; margin-bottom: 10px; padding-bottom: 0;">
+                <div class="modal-title"><i class="fas fa-plus-square"></i> 添加链接</div>
+                <i class="fas fa-times close-btn" onclick="closeAddModal(event)"></i>
+            </div>
+            <input type="text" id="inName" class="cyber-input" placeholder="站点名称 (e.g. GitHub)">
+            <input type="text" id="inUrl" class="cyber-input" placeholder="链接地址 (http...)">
+            <input type="text" id="inDesc" class="cyber-input" placeholder="简短描述 (可选)">
+            <input type="text" id="inIcon" class="cyber-input" placeholder="图标代码 (e.g. fas fa-dna)">
+            <input type="text" id="inColor" class="cyber-input" placeholder="图标颜色 (e.g. #00ffcc)">
+            <button class="btn-save" onclick="saveNewLink()">确认写入配置</button>
+        </div>
+    </div>
+
     <div class="main-container" id="main-hud">
         <div class="header">
             <div>
                 <h1>
                     <img src="https://pic-1259340288.cos.ap-guangzhou.myqcloud.com/img/icon.png" alt="Jiaxuan Logo" class="site-logo">
-                    JIAXUAN_WORKSPACE_ [王家轩 -> 工作空间...]
+                    JIAXUAN_WORKSPACE_
                 </h1>
                 <p style="color: var(--accent); font-family: Microsoft YaHei; font-weight: 700; letter-spacing: 1px;">
                     > SECURE CONNECTION ESTABLISHED | 炫酷的个人导航页面 
@@ -143,35 +164,83 @@
 
     <script>
         let workspaceData = [];
+        let currentAddCatIdx = null; 
+        let sortableInstances = []; 
+        let globalMouseX = 0;
+        let globalMouseY = 0;
 
-        // 1. JSON 渲染引擎 (支持普通卡片和文件夹卡片)
+        // 全局雷达追踪鼠标/手指坐标
+        document.addEventListener('dragover', (e) => { globalMouseX = e.clientX; globalMouseY = e.clientY; }, false);
+        document.addEventListener('touchmove', (e) => { if(e.touches.length > 0) { globalMouseX = e.touches[0].clientX; globalMouseY = e.touches[0].clientY; } }, {passive: true});
+
+        // 免疫任何数组位移，全局扫描并销毁所有空文件夹
+        function autoCleanFolder() {
+            workspaceData.forEach((cat) => {
+                cat.items = cat.items.filter(item => {
+                    if (item.type === 'folder' && (!item.children || item.children.length === 0)) return false; 
+                    return true;
+                });
+            });
+            localStorage.setItem('jiaxuan_nav_data', JSON.stringify(workspaceData));
+        }
+
+        // 获取合并目标 (修复了隐形弹窗遮挡 Bug！)
+        function getMergeTarget(clientX, clientY, draggedItem) {
+            let target = null;
+            // 核心修复：只扫描桌面的卡片；如果弹窗开了，才扫描弹窗里的卡片
+            let selector = '#workspace-render-area .nav-card';
+            if (document.getElementById('hud-modal').classList.contains('active')) {
+                selector += ', #modal-body-content .nav-card';
+            }
+            
+            document.querySelectorAll(selector).forEach(card => {
+                if (card === draggedItem) return; 
+                const rect = card.getBoundingClientRect();
+                const marginX = rect.width * 0.15; 
+                const marginY = rect.height * 0.15;
+                if (clientX > rect.left + marginX && clientX < rect.right - marginX &&
+                    clientY > rect.top + marginY && clientY < rect.bottom - marginY) {
+                    target = card; 
+                }
+            });
+            return target;
+        }
+
+        // 1. JSON 渲染引擎
         function renderHUD() {
             const area = document.getElementById('workspace-render-area');
             area.innerHTML = '';
 
             workspaceData.forEach((cat, cIdx) => {
-                // 渲染分类标题
-                const titleHtml = `<div class="category-title"><i class="${cat.icon}"></i> ${cat.category}</div>`;
+                const titleHtml = `
+                    <div class="category-title">
+                        <i class="${cat.icon}"></i> ${cat.category}
+                        <i class="fas fa-plus-circle add-btn" title="在此分类下添加" onclick="openAddModal(${cIdx})"></i>
+                    </div>`;
+                
                 const gridDiv = document.createElement('div');
                 gridDiv.className = 'grid-container';
+                gridDiv.dataset.type = 'desktop'; // 标记为桌面区域
+                gridDiv.dataset.catIdx = cIdx; 
 
-                // 渲染项目
                 cat.items.forEach((item, iIdx) => {
                     const card = document.createElement('a');
                     card.className = 'nav-card';
+                    card.dataset.idx = iIdx; 
                     
                     let badgeHtml = '';
                     if (item.badge) badgeHtml += `<span class="dir-badge">${item.badge}</span>`;
                     if (item.badge2) badgeHtml += `<span class="new-badge">${item.badge2}</span>`;
+
                     card.innerHTML = `
                         <div class="icon-box" style="color: ${item.color}; ${item.type === 'folder' ? 'font-size: 1.5rem;' : ''}"><i class="${item.icon}"></i></div>
                         <div class="card-text">
                             <span class="title">${item.name} ${badgeHtml}</span>
                             <span class="desc">${item.desc}</span>
                         </div>
+                        <i class="fas fa-times-circle del-btn" title="删除" onclick="deleteItem(event, ${cIdx}, ${iIdx})"></i>
                     `;
 
-                    // 判断交互行为
                     if (item.type === 'folder') {
                         card.onclick = () => openFolder(item.name, cIdx, iIdx);
                     } else {
@@ -184,46 +253,243 @@
                 area.insertAdjacentHTML('beforeend', titleHtml);
                 area.appendChild(gridDiv);
             });
+            
             localStorage.setItem('jiaxuan_nav_data', JSON.stringify(workspaceData));
+            initSortable(); 
         }
 
-        // 2. 动态文件夹逻辑
+        // 2. 桌面拖拽引擎 (完美恢复正常排序)
+        function initSortable() {
+            sortableInstances.forEach(inst => inst.destroy());
+            sortableInstances = [];
+
+            const containers = document.querySelectorAll('#workspace-render-area .grid-container');
+            containers.forEach(container => {
+                const inst = new Sortable(container, {
+                    group: 'workspace', 
+                    animation: 200,
+                    ghostClass: 'sortable-ghost',
+                    preventOnFilter: false, 
+                    
+                    onMove: function (evt) {
+                        document.querySelectorAll('.merge-highlight').forEach(el => el.classList.remove('merge-highlight'));
+                        const targetCard = getMergeTarget(globalMouseX, globalMouseY, evt.dragged);
+                        if (targetCard) {
+                            targetCard.classList.add('merge-highlight');
+                            return false; // 如果在中心，阻止原生态排序，准备合并
+                        }
+                        return true; // 允许正常原生态排序！
+                    },
+                    
+                    onEnd: function (evt) {
+                        document.querySelectorAll('.merge-highlight').forEach(el => el.classList.remove('merge-highlight'));
+                        const targetCard = getMergeTarget(globalMouseX, globalMouseY, evt.item);
+
+                        const fromCatIdx = parseInt(evt.from.dataset.catIdx);
+                        const oldIdx = evt.oldIndex;
+                        
+                        // ========== 触发合并 ==========
+                        if (targetCard) {
+                            const toCatIdx = parseInt(targetCard.closest('.grid-container').dataset.catIdx);
+                            const toIdx = parseInt(targetCard.dataset.idx);
+
+                            if (!isNaN(toIdx) && !isNaN(toCatIdx)) {
+                                if (fromCatIdx === toCatIdx && oldIdx === toIdx) { renderHUD(); return; } 
+
+                                const dragged = workspaceData[fromCatIdx].items[oldIdx];
+                                const target = workspaceData[toCatIdx].items[toIdx];
+
+                                let mergedItem;
+                                if (target.type !== 'folder' && dragged.type !== 'folder') {
+                                    let folderName = prompt("检测到合并操作，请输入新建文件夹的名称:", "新建模块") || "新建模块";
+                                    mergedItem = { type: 'folder', name: folderName, desc: `包含 ${dragged.name} 等`, icon: 'fas fa-folder-tree', color: '#00ffcc', badge: 'DIR', children: [target, dragged] };
+                                } else if (target.type === 'folder' && dragged.type !== 'folder') {
+                                    mergedItem = { ...target, children: [...target.children, dragged] };
+                                } else if (target.type !== 'folder' && dragged.type === 'folder') {
+                                    mergedItem = { ...dragged, children: [...dragged.children, target] };
+                                } else {
+                                    mergedItem = { ...target, children: [...target.children, ...dragged.children] };
+                                }
+
+                                // 严防数组索引错位的完美替换
+                                let actualToIdx = toIdx;
+                                workspaceData[fromCatIdx].items.splice(oldIdx, 1);
+                                if (fromCatIdx === toCatIdx && oldIdx < toIdx) actualToIdx--; // 如果同一个分类且往前拖，索引减1
+                                workspaceData[toCatIdx].items[actualToIdx] = mergedItem;
+                            }
+                        } 
+                        // ========== 正常排序 & 跨分类拖拽 ==========
+                        else {
+                            const toCatIdx = parseInt(evt.to.dataset.catIdx);
+                            const newIdx = evt.newIndex;
+                            const movedItem = workspaceData[fromCatIdx].items.splice(oldIdx, 1)[0];
+                            workspaceData[toCatIdx].items.splice(newIdx, 0, movedItem);
+                        }
+                        renderHUD(); 
+                    }
+                });
+                sortableInstances.push(inst); 
+            });
+        }
+
+        // 3. 文件夹弹窗与内部全息拖拽引擎
         function openFolder(title, cIdx, iIdx) {
             document.getElementById('modal-title').innerHTML = `<i class="fas fa-folder-open"></i> MODULE: ${title}`;
             const modalBody = document.getElementById('modal-body-content');
-            modalBody.innerHTML = ''; // 清空
+            modalBody.innerHTML = ''; 
+            modalBody.dataset.type = 'modal'; // 标记为弹窗区域
+            modalBody.dataset.cIdx = cIdx;
+            modalBody.dataset.iIdx = iIdx;
 
             const children = workspaceData[cIdx].items[iIdx].children;
-            children.forEach(link => {
+            children.forEach((link, childIdx) => {
                 const card = document.createElement('a');
                 card.className = 'nav-card modal-card';
                 card.href = link.url;
                 card.target = '_blank';
+                card.dataset.idx = childIdx;
                 card.innerHTML = `
                     <div class="icon-box" style="color: ${link.color};"><i class="${link.icon}"></i></div>
                     <div class="card-text"><span class="title">${link.name}</span><span class="desc">${link.desc}</span></div>
+                    <i class="fas fa-times-circle del-btn" title="删除" onclick="deleteFolderItem(event, ${cIdx}, ${iIdx}, ${childIdx})"></i>
                 `;
                 modalBody.appendChild(card);
             });
 
             document.getElementById('hud-modal').classList.add('active');
             document.body.style.overflow = "hidden"; 
+
+            if (window.modalSortableInst) window.modalSortableInst.destroy();
+            window.modalSortableInst = new Sortable(modalBody, {
+                group: 'workspace',
+                animation: 200,
+                ghostClass: 'sortable-ghost',
+                preventOnFilter: false,
+                onStart: function() {
+                    const modal = document.getElementById('hud-modal');
+                    modal.style.transition = 'none';
+                    modal.style.background = 'rgba(2, 6, 12, 0.2)';
+                    modal.querySelector('.modal-window').style.opacity = '0.1';
+                    modal.style.pointerEvents = 'none'; 
+                },
+                onMove: function (evt) {
+                    document.querySelectorAll('.merge-highlight').forEach(el => el.classList.remove('merge-highlight'));
+                    const targetCard = getMergeTarget(globalMouseX, globalMouseY, evt.dragged);
+                    if (targetCard) {
+                        targetCard.classList.add('merge-highlight');
+                        return false; 
+                    }
+                    return true; 
+                },
+                onEnd: function(evt) {
+                    const modal = document.getElementById('hud-modal');
+                    modal.style.transition = 'all 0.4s ease';
+                    modal.style.background = '';
+                    modal.querySelector('.modal-window').style.opacity = '';
+                    modal.style.pointerEvents = '';
+                    document.querySelectorAll('.merge-highlight').forEach(el => el.classList.remove('merge-highlight'));
+
+                    const fromCatIdx = parseInt(evt.from.dataset.cIdx);
+                    const fromFolderIdx = parseInt(evt.from.dataset.iIdx);
+                    const oldIdx = evt.oldIndex;
+
+                    const targetCard = getMergeTarget(globalMouseX, globalMouseY, evt.item);
+
+                    if (targetCard) {
+                        const toCatIdx = parseInt(targetCard.closest('.grid-container').dataset.catIdx);
+                        const toIdx = parseInt(targetCard.dataset.idx);
+
+                        if (!isNaN(toIdx) && !isNaN(toCatIdx)) {
+                            // 防止套娃：从文件夹拖出砸到自己头上
+                            if (fromCatIdx === toCatIdx && fromFolderIdx === toIdx) { closeFolder(); renderHUD(); return; }
+
+                            const target = workspaceData[toCatIdx].items[toIdx];
+                            const dragged = workspaceData[fromCatIdx].items[fromFolderIdx].children[oldIdx];
+                            
+                            if (target.type === 'folder') {
+                                target.children.push(dragged);
+                            } else {
+                                let folderName = prompt("检测到合并操作，请输入新建文件夹的名称:", "新建模块") || "新建模块";
+                                const newFolder = { type: 'folder', name: folderName, desc: `包含 ${dragged.name} 等`, icon: 'fas fa-folder-tree', color: '#00ffcc', badge: 'DIR', children: [target, dragged] };
+                                workspaceData[toCatIdx].items[toIdx] = newFolder;
+                            }
+                            workspaceData[fromCatIdx].items[fromFolderIdx].children.splice(oldIdx, 1);
+                        }
+                        autoCleanFolder(); 
+                        closeFolder();
+                        renderHUD();
+                        return;
+                    }
+
+                    // 如果停留在弹窗内排序
+                    if (evt.to.id === 'modal-body-content') {
+                        if (evt.oldIndex !== evt.newIndex) {
+                            const moved = workspaceData[fromCatIdx].items[fromFolderIdx].children.splice(oldIdx, 1)[0];
+                            workspaceData[fromCatIdx].items[fromFolderIdx].children.splice(evt.newIndex, 0, moved);
+                            localStorage.setItem('jiaxuan_nav_data', JSON.stringify(workspaceData));
+                            openFolder(workspaceData[fromCatIdx].items[fromFolderIdx].name, fromCatIdx, fromFolderIdx);
+                        }
+                    } 
+                    // 如果拖出了弹窗放在桌面上
+                    else if (evt.to.classList.contains('grid-container')) {
+                        const toCatIdx = parseInt(evt.to.dataset.catIdx);
+                        const newIdx = evt.newIndex;
+                        const moved = workspaceData[fromCatIdx].items[fromFolderIdx].children.splice(oldIdx, 1)[0];
+                        workspaceData[toCatIdx].items.splice(newIdx, 0, moved);
+                        autoCleanFolder(); 
+                        closeFolder();
+                        renderHUD();
+                    }
+                }
+            });
         }
 
-        function closeFolder(event) {
-            if(event) event.preventDefault();
+        function closeFolder(e) {
+            if(e) e.preventDefault();
             document.getElementById('hud-modal').classList.remove('active');
             document.body.style.overflow = "auto"; 
         }
 
-        // 3. 数据初始化与导入/导出
+        // 4. 基础增删与导出导入逻辑
+        function deleteItem(e, cIdx, iIdx) {
+            e.preventDefault(); e.stopPropagation(); 
+            if(confirm(`确定删除 [${workspaceData[cIdx].items[iIdx].name}] 吗？`)) {
+                workspaceData[cIdx].items.splice(iIdx, 1);
+                renderHUD();
+            }
+        }
+
+        function deleteFolderItem(e, cIdx, iIdx, childIdx) {
+            e.preventDefault(); e.stopPropagation();
+            const folder = workspaceData[cIdx].items[iIdx];
+            const childName = folder.children[childIdx].name;
+            if(confirm(`确定从文件夹中移除 [${childName}] 吗？`)) {
+                folder.children.splice(childIdx, 1);
+                autoCleanFolder();
+                const folderExists = workspaceData[cIdx].items.includes(folder);
+                if (folderExists) { openFolder(folder.name, cIdx, workspaceData[cIdx].items.indexOf(folder)); } else { closeFolder(); }
+                renderHUD(); 
+            }
+        }
+
+        function openAddModal(cIdx) { currentAddCatIdx = cIdx; document.getElementById('addModal').classList.add('active'); }
+        function closeAddModal(e) { if(e) e.preventDefault(); document.getElementById('addModal').classList.remove('active'); ['inName', 'inUrl', 'inDesc', 'inIcon', 'inColor'].forEach(id => document.getElementById(id).value = ''); }
+
+        function saveNewLink() {
+            const newItem = {
+                type: 'link', name: document.getElementById('inName').value || '未命名',
+                url: document.getElementById('inUrl').value || '#', desc: document.getElementById('inDesc').value || '',
+                icon: document.getElementById('inIcon').value || 'fas fa-link', color: document.getElementById('inColor').value || '#00ffcc'
+            };
+            workspaceData[currentAddCatIdx].items.push(newItem);
+            closeAddModal(); renderHUD();
+        }
+
         async function initData() {
             try {
                 const res = await fetch('./config.json');
                 workspaceData = res.ok ? await res.json() : JSON.parse(localStorage.getItem('jiaxuan_nav_data')) || [];
-            } catch(e) { 
-                workspaceData = JSON.parse(localStorage.getItem('jiaxuan_nav_data')) || []; 
-            }
+            } catch(e) { workspaceData = JSON.parse(localStorage.getItem('jiaxuan_nav_data')) || []; }
             if(workspaceData.length > 0) renderHUD();
         }
 
@@ -234,18 +500,13 @@
 
         function importJSON(input) {
             const reader = new FileReader();
-            reader.onload = (e) => { 
-                workspaceData = JSON.parse(e.target.result); 
-                renderHUD(); 
-                alert("导入成功！"); 
-            };
+            reader.onload = (e) => { workspaceData = JSON.parse(e.target.result); renderHUD(); alert("配置已成功导入！"); };
             reader.readAsText(input.files[0]);
         }
 
-        // 4. 开机动画与粒子层
+        // 5. 开机动画与粒子层
         document.addEventListener("DOMContentLoaded", () => {
-            initData(); // 加载数据
-            
+            initData(); 
             const bootTexts = [
                 "[SYSTEM] INITIALIZING JIAXUAN_OS CORE v4.0...",
                 "[NETWORK] ESTABLISHING SECURE TUNNEL TO HPC CLUSTERS...",
@@ -269,43 +530,17 @@
                     p.className = 'boot-text'; p.innerText = text;
                     terminal.appendChild(p);
                     setTimeout(() => p.style.opacity = 1, 50);
-                    
-                    if (index === bootTexts.length - 1) {
-                        // 【修改点 1】文字全部出完后，进入主界面的停留时间。
-                        // 从 1200 毫秒改为了 400 毫秒
-                        setTimeout(() => {
-                            bootScreen.classList.add('boot-complete');
-                            mainHud.style.display = 'block';
-                            mainHud.style.animation = "fade-in 1s forwards"; 
-                        }, 400);
-                    }
+                    if (index === bootTexts.length - 1) { setTimeout(() => { bootScreen.classList.add('boot-complete'); mainHud.style.display = 'block'; }, 400); }
                 }, delay);
-                
-                // 【修改点 2】控制每行文字出现的间隔时间。
-                // 原来是随机等待 250ms ~ 650ms，现在改成了随机等待 50ms ~ 130ms
-                delay += Math.random() * 80 + 100; 
+                delay += Math.random() * 80 + 50; 
             });
 
-            // 粒子特效
             particlesJS('particles-js', {
-                "particles": {
-                    "number": { "value": 70, "density": { "enable": true, "value_area": 800 } },
-                    "color": { "value": "#00ffcc" },
-                    "shape": { "type": "circle" },
-                    "opacity": { "value": 0.5, "random": true },
-                    "size": { "value": 3, "random": true },
-                    "line_linked": { "enable": true, "distance": 150, "color": "#00ffcc", "opacity": 0.2, "width": 1 },
-                    "move": { "enable": true, "speed": 2, "direction": "none", "random": true, "out_mode": "out" }
-                },
-                "interactivity": {
-                    "detect_on": "canvas",
-                    "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
-                    "modes": { "grab": { "distance": 250, "line_linked": { "opacity": 0.8 } }, "push": { "particles_nb": 4 } }
-                },
+                "particles": { "number": { "value": 70, "density": { "enable": true, "value_area": 800 } }, "color": { "value": "#00ffcc" }, "shape": { "type": "circle" }, "opacity": { "value": 0.5, "random": true }, "size": { "value": 3, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": "#00ffcc", "opacity": 0.2, "width": 1 }, "move": { "enable": true, "speed": 2, "direction": "none", "random": true, "out_mode": "out" } },
+                "interactivity": { "detect_on": "canvas", "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true }, "modes": { "grab": { "distance": 250, "line_linked": { "opacity": 0.8 } }, "push": { "particles_nb": 4 } } },
                 "retina_detect": true
             });
         });
     </script>
-    <style> @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } </style>
 </body>
 </html>
