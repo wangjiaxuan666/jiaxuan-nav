@@ -1,10 +1,9 @@
 [
-    
     {
         "category": "工作相关网页",
         "icon": "fas fa-microchip",
         "items": [
-            {   
+            {
                 "type": "link",
                 "name": "Gemini",
                 "url": "https://gemini.google.com/",
@@ -79,7 +78,7 @@
                         "name": "VerCel",
                         "url": "https://vercel.com/wangjiaxuan666s-projects",
                         "desc": "托管网页的网站",
-                        "icon": "fas fa-fill-drip", 
+                        "icon": "fas fa-fill-drip",
                         "color": "#fff"
                     },
                     {
@@ -107,11 +106,19 @@
             },
             {
                 "type": "link",
-                "name": "ColorBrewer 2.0",
-                "url": "http://colorbrewer2.org",
-                "desc": "科研数据地图与散点配色",
-                "icon": "fas fa-palette",
-                "color": "#10b981"
+                "name": "家轩色板",
+                "url": "https://col.abego.cn/",
+                "desc": "颜色挑选",
+                "icon": "fas fa-image",
+                "color": "#9467BD"
+            },
+            {
+                "type": "link",
+                "name": "Color-hex",
+                "url": "https://www.color-hex.com/",
+                "desc": "Hex 色板灵感库",
+                "icon": "fas fa-fill-drip",
+                "color": "#cc0000"
             },
             {
                 "name": "Emoji 速查表",
@@ -122,11 +129,19 @@
             },
             {
                 "type": "link",
-                "name": "Color-hex",
-                "url": "https://www.color-hex.com/",
-                "desc": "Hex 色板灵感库",
-                "icon": "fas fa-fill-drip",
-                "color": "#cc0000"
+                "name": "ColorBrewer 2.0",
+                "url": "http://colorbrewer2.org",
+                "desc": "科研数据地图与散点配色",
+                "icon": "fas fa-palette",
+                "color": "#10b981"
+            },
+            {
+                "type": "link",
+                "name": "图标",
+                "url": "https://fontawesome.com/icons/bell?f=classic&s=solid",
+                "desc": "图标大全",
+                "icon": "fas fa-bell",
+                "color": "#F39B7F"
             }
         ]
     },
